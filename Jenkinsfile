@@ -28,27 +28,27 @@ pipeline {
         stage('Terraform Apply') {
             steps {
                 script {
-                    sh 'terraform apply -auto-approve -var="aws_access_key=$AWS_ACCESS_KEY_ID" -var="aws_secret_key=$AWS_SECRET_ACCESS_KEY" -var="region=$TF_VAR_region" -var="vpc_cidr_block=$TF_VAR_vpc_cidr_block" -var="subnet_cidr_blocks=$TF_VAR_subnet_cidr_blocks" -var="availability_zones=$TF_VAR_availability_zones"'
+                    sh 'terraform apply -auto-approve -var="aws_access_key=${AWS_ACCESS_KEY_ID}" -var="aws_secret_key=${AWS_SECRET_ACCESS_KEY}" -var="region=${TF_VAR_region}" -var="vpc_cidr_block=${TF_VAR_vpc_cidr_block}" -var="subnet_cidr_blocks=${TF_VAR_subnet_cidr_blocks}" -var="availability_zones=${TF_VAR_availability_zones}"'
                 }
             }
         }
+    }
 
-        stage('Confirm Destroy') {
-            steps {
-                script {
-                    def userInput = input(
-                        message: 'Do you want to run Terraform destroy? Select "Proceed" to run destroy, or "Abort" to skip.',
-                        parameters: [
-                            choice(choices: 'Proceed\nAbort', description: 'Choose whether to proceed with Terraform destroy or abort the job.', name: 'ACTION')
-                        ]
-                    )
+    post {
+        always {
+            script {
+                def userInput = input(
+                    message: 'Do you want to run Terraform destroy? Select "Proceed" to run destroy, or "Abort" to skip.',
+                    parameters: [
+                        choice(choices: 'Proceed\nAbort', description: 'Choose whether to proceed with Terraform destroy or abort the job.', name: 'ACTION')
+                    ]
+                )
 
-                    if (userInput.ACTION == 'Proceed') {
-                        echo 'Running Terraform destroy...'
-                        sh 'terraform destroy -auto-approve -var="aws_access_key=$AWS_ACCESS_KEY_ID" -var="aws_secret_key=$AWS_SECRET_ACCESS_KEY" -var="region=$TF_VAR_region" -var="vpc_cidr_block=$TF_VAR_vpc_cidr_block" -var="subnet_cidr_blocks=$TF_VAR_subnet_cidr_blocks" -var="availability_zones=$TF_VAR_availability_zones"'
-                    } else {
-                        echo 'Skipping Terraform destroy.'
-                    }
+                if (userInput.ACTION == 'Proceed') {
+                    echo 'Running Terraform destroy...'
+                    sh 'terraform destroy -auto-approve -var="aws_access_key=${AWS_ACCESS_KEY_ID}" -var="aws_secret_key=${AWS_SECRET_ACCESS_KEY}" -var="region=${TF_VAR_region}" -var="vpc_cidr_block=${TF_VAR_vpc_cidr_block}" -var="subnet_cidr_blocks=${TF_VAR_subnet_cidr_blocks}" -var="availability_zones=${TF_VAR_availability_zones}"'
+                } else {
+                    echo 'Skipping Terraform destroy.'
                 }
             }
         }
