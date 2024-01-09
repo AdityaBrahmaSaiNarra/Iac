@@ -13,7 +13,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/dreamtechtrainings/Iac.git'
+                git 'https://github.com/AdityaBrahmaSaiNarra/Iac.git'
             }
         }
 
