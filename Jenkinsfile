@@ -13,7 +13,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/AdityaBrahmaSaiNarra/Iac.git'
+                checkout scm
             }
         }
 
@@ -25,10 +25,30 @@ pipeline {
             }
         }
 
+        stage('Terraform Plan') {
+            steps {
+                script {
+                    sh 'terraform plan -var="aws_access_key=${AWS_ACCESS_KEY_ID}" -var="aws_secret_key=${AWS_SECRET_ACCESS_KEY}" -var="region=${TF_VAR_region}" -var="vpc_cidr_block=${TF_VAR_vpc_cidr_block}" -var="subnet_cidr_blocks=${TF_VAR_subnet_cidr_blocks}" -var="availability_zones=${TF_VAR_availability_zones}"'
+                }
+            }
+        }
+
         stage('Terraform Apply') {
             steps {
                 script {
-                    sh 'terraform apply -auto-approve -var="aws_access_key=${AWS_ACCESS_KEY_ID}" -var="aws_secret_key=${AWS_SECRET_ACCESS_KEY}" -var="region=${TF_VAR_region}" -var="vpc_cidr_block=${TF_VAR_vpc_cidr_block}" -var="subnet_cidr_blocks=${TF_VAR_subnet_cidr_blocks}" -var="availability_zones=${TF_VAR_availability_zones}"'
+                    def userInput = input(
+                        message: 'Do you want to run Terraform apply? Select "Proceed" to apply changes, or "Abort" to skip.',
+                        parameters: [
+                            choice(choices: 'Proceed\nAbort', description: 'Choose whether to proceed with Terraform apply or abort the job.', name: 'ACTION')
+                        ]
+                    )
+
+                    if (userInput == 'Proceed') {
+                        echo 'Running Terraform apply...'
+                        sh 'terraform apply -auto-approve -var="aws_access_key=${AWS_ACCESS_KEY_ID}" -var="aws_secret_key=${AWS_SECRET_ACCESS_KEY}" -var="region=${TF_VAR_region}" -var="vpc_cidr_block=${TF_VAR_vpc_cidr_block}" -var="subnet_cidr_blocks=${TF_VAR_subnet_cidr_blocks}" -var="availability_zones=${TF_VAR_availability_zones}"'
+                    } else {
+                        echo 'Skipping Terraform apply.'
+                    }
                 }
             }
         }
@@ -54,4 +74,3 @@ pipeline {
         }
     }
 }
-
